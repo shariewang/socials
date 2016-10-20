@@ -1,27 +1,17 @@
 package com.sharie.mdb.mdbsocials;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.util.ArrayList;
-
-
 
 public class InterestedAdapter extends RecyclerView.Adapter<InterestedAdapter.CustomViewHolder> {
 
     private Context context;
     private ArrayList<String> people;
-
-
 
     public InterestedAdapter(Context context, ArrayList<String> people) {
         this.people = people;

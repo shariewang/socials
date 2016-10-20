@@ -12,7 +12,6 @@ public class User {
     public String id;
 
     public User(){
-
     }
 
     public User(String uid, String email){

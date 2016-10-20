@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,7 +11,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -20,29 +18,43 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
 
-public class FeedActivity extends AppCompatActivity {
+public class FeedActivity extends AppCompatActivity implements View.OnClickListener{
 
     ArrayList<Idea> ideas = new ArrayList<Idea>();
     IdeaAdapter ideaAdapter;
     DatabaseReference ref;
     FirebaseAuth mAuth;
     FirebaseDatabase database;
-
-    public FeedActivity(){}
+    Toolbar toolbar;
+    RecyclerView recyclerView;
+    FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        //UI elements
+        fab = (FloatingActionButton) findViewById(R.id.new_idea);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView1);
+        ideaAdapter = new IdeaAdapter(getApplicationContext(), ideas);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+        layoutManager.setReverseLayout(true);
+        layoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(ideaAdapter);
+
         setSupportActionBar(toolbar);
 
-
+        //Database elements
         mAuth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        ref = database.getReference("ideas");
+
+        //If user signs out, returns to the LoginActivity
         mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -53,26 +65,8 @@ public class FeedActivity extends AppCompatActivity {
                 }
             }
         });
-        database = FirebaseDatabase.getInstance();
-        ref = database.getReference("ideas");
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView1);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        layoutManager.setReverseLayout(true);
-        layoutManager.setStackFromEnd(true);
-        recyclerView.setLayoutManager(layoutManager);
-
-        ideaAdapter = new IdeaAdapter(getApplicationContext(), ideas);
-        recyclerView.setAdapter(ideaAdapter);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.new_idea);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),NewSocial.class);
-                startActivity(intent);
-            }
-        });
+        //Listens for new socials or changes in the details of a social and acts accordingly
         ref.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -89,7 +83,6 @@ public class FeedActivity extends AppCompatActivity {
                         ideas.remove(i);
                     }
                 }
-
                 ideaAdapter.notifyDataSetChanged();
             }
 
@@ -104,18 +97,21 @@ public class FeedActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ideaAdapter.notifyDataSetChanged();
+    public void onClick(View v){
+        switch(v.getId()){
+            case R.id.new_idea:
+                Intent intent = new Intent(getApplicationContext(),NewSocial.class);
+                startActivity(intent);
+                break;
+        }
     }
+
+    //Sets menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_details, menu);
@@ -130,5 +126,11 @@ public class FeedActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ideaAdapter.notifyDataSetChanged();
     }
 }

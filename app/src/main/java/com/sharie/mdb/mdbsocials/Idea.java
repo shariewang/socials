@@ -1,27 +1,12 @@
 package com.sharie.mdb.mdbsocials;
-
-import android.os.Parcelable;
-
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Created by Sharie on 10/4/16.
  */
 
 public class Idea{
 
-    public String title;
-    public String author;
-    public String description;
+    public String title, author, description, key, email, date;
     public int stars;
-    public String key;
-    public String email;
-    public String date;
 
     public Idea(){}
 

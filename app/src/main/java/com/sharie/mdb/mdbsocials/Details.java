@@ -5,24 +5,18 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,17 +26,16 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 
-import java.util.ArrayList;
-
-public class Details extends AppCompatActivity {
+public class Details extends AppCompatActivity implements View.OnClickListener {
 
     private String title, description, email, key, date;
     private int stars;
-    private DatabaseReference database;
-    private DatabaseReference starsRef;
+    private DatabaseReference database, starsRef;
     private FirebaseAuth mAuth;
     private FloatingActionButton star;
     private TextView content;
+    private Toolbar toolbar;
+    private FloatingActionButton info;
     private String url;
     private CollapsingToolbarLayout tool;
     private ImageView image;
@@ -52,12 +45,8 @@ public class Details extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-
-
-
+        //Gets extras for information about the current social
         title = getIntent().getExtras().getString("title");
         description = getIntent().getExtras().getString("descript");
         email = getIntent().getExtras().getString("email");
@@ -66,72 +55,81 @@ public class Details extends AppCompatActivity {
         date = getIntent().getExtras().getString("date");
         url = getIntent().getExtras().getString("url");
 
+        //Initialize UI elements
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        tool = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         image = (ImageView) findViewById(R.id.imageView2);
-        //Glide.with(getApplicationContext()).load(url).into(image);
-
         content = (TextView) findViewById(R.id.content);
-        setMessage();
+        star = (FloatingActionButton) findViewById(R.id.star);
+        info = (FloatingActionButton) findViewById(R.id.interested);
 
+        setSupportActionBar(toolbar);
+        setMessage();
+        tool.setTitle(title);
+
+        //Initialize FireBase references
         starsRef = FirebaseDatabase.getInstance().getReference("ideas/"+key+"/stars");
         database = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
-        tool = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-        tool.setTitle(title);
-
-        star = (FloatingActionButton) findViewById(R.id.star);
-        star.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //BUG: DOES NOT REBIND VIEW HOLDER NOR DETAIL SCREEN IF YOU CLICK ON DETAIL AGAIN UNTIL RE-SIGN IN.
-                FirebaseUser cur = mAuth.getCurrentUser();
-
-                if (cur != null)
-                    database.child("interested").child(key).child(cur.getUid()).setValue(cur.getEmail());
-                    starsRef.runTransaction(new Transaction.Handler() {
-                        @Override
-                        public Transaction.Result doTransaction(MutableData mutableData) {
-                            Integer cur = mutableData.getValue(Integer.class);
-                            mutableData.setValue(cur+1);
-                            return Transaction.success(mutableData);
-                        }
-                        @Override
-                        public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {}
-                    });
-                    starsRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            stars = dataSnapshot.getValue(Integer.class);
-                            setMessage();
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                    star.setImageResource(R.drawable.star);
-            }
-        });
-        FloatingActionButton info = (FloatingActionButton) findViewById(R.id.interested);
-        info.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent show_info = new Intent(getApplicationContext(),Interested.class);
-                show_info.putExtra("key", key);
-                startActivity(show_info);
-            }
-        });
-
+        //Gets download URL of image file from storage database
         FirebaseStorage.getInstance().getReferenceFromUrl("gs://mdb-socials-5cc85.appspot.com").child(key + ".jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 new DownloadFilesTask().execute(uri.toString());
-                //Glide.with(context).load(uri.toString()).thumbnail(0.5f).crossFade().diskCacheStrategy(DiskCacheStrategy.ALL).into(holder.imageView);
             }
         });
     }
 
+    public void onClick(View v){
+        switch(v.getId()){
+            case R.id.star:
+                FirebaseUser cur = mAuth.getCurrentUser();
+
+                //Adds self to list of people interested in this social
+                if (cur != null)
+                    database.child("interested").child(key).child(cur.getUid()).setValue(cur.getEmail());
+
+                //Runs Transaction to update the star count for this social in real-time
+                starsRef.runTransaction(new Transaction.Handler() {
+                    @Override
+                    public Transaction.Result doTransaction(MutableData mutableData) {
+                        Integer cur = mutableData.getValue(Integer.class);
+                        mutableData.setValue(cur+1);
+                        return Transaction.success(mutableData);
+                    }
+                    @Override
+                    public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {}
+                });
+
+                //Listens for changes in the star count and updates the number of people interested
+                //on the details page accordingly
+                starsRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        stars = dataSnapshot.getValue(Integer.class);
+                        setMessage();
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {}
+                });
+
+                //Makes star icon appear clicked
+                star.setImageResource(R.drawable.star);
+                break;
+            case R.id.info:
+                Intent show_info = new Intent(getApplicationContext(),Interested.class);
+                show_info.putExtra("key", key);
+                startActivity(show_info);
+                break;
+        }
+    }
+
+    /*
+    * @param none
+    * @return none
+    * Resets the message according to the star count of the social
+    */
     public void setMessage(){
         String ans = "";
         ans += date + "\n";
@@ -144,7 +142,8 @@ public class Details extends AppCompatActivity {
         content.setText(ans);
     }
 
-    class DownloadFilesTask extends AsyncTask<String, Void, Bitmap> {
+    //Runs AsyncTask to download image
+    private class DownloadFilesTask extends AsyncTask<String, Void, Bitmap> {
         protected Bitmap doInBackground(String... strings) {
             try {return Glide.
                     with(getApplicationContext()).

@@ -2,35 +2,18 @@ package com.sharie.mdb.mdbsocials;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-
 import java.util.ArrayList;
-
-
 
 public class IdeaAdapter extends RecyclerView.Adapter<IdeaAdapter.CustomViewHolder> {
 
@@ -38,9 +21,9 @@ public class IdeaAdapter extends RecyclerView.Adapter<IdeaAdapter.CustomViewHold
     private ArrayList<Idea> ideas;
     private String url;
     private Idea current;
-    FirebaseStorage storage = FirebaseStorage.getInstance();
-    StorageReference storageRef = storage.getReferenceFromUrl("gs://mdb-socials-5cc85.appspot.com");
-    StorageReference pathReference;
+    private FirebaseStorage storage = FirebaseStorage.getInstance();
+    private StorageReference storageRef = storage.getReferenceFromUrl("gs://mdb-socials-5cc85.appspot.com");
+    private StorageReference pathReference;
 
 
     public IdeaAdapter(Context context, ArrayList<Idea> ideas) {
@@ -66,7 +49,7 @@ public class IdeaAdapter extends RecyclerView.Adapter<IdeaAdapter.CustomViewHold
             }
         });
 
-
+        //Sets details of the social
         holder.textView.setText(current.title);
         if(current.stars == 1)
             holder.interested.setText(current.stars+" person is interested");
@@ -97,6 +80,8 @@ public class IdeaAdapter extends RecyclerView.Adapter<IdeaAdapter.CustomViewHold
                 public void onClick(View v) {
                     int num = getAdapterPosition();
                     Idea current = ideas.get(num);
+
+                    //Passes all details of this social into the Details class and opens it
                     Intent intent = new Intent(context,Details.class);
                     intent.putExtra("title", current.title);
                     intent.putExtra("descript", current.description);
