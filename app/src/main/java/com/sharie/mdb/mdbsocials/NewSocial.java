@@ -52,6 +52,9 @@ public class NewSocial extends AppCompatActivity implements View.OnClickListener
         description = (EditText) findViewById(R.id.description);
         dates = (EditText) findViewById(R.id.dates);
         Button create = (Button) findViewById(R.id.create_event);
+
+        photo.setOnClickListener(this);
+        create.setOnClickListener(this);
     }
 
     public void onClick(View v){
@@ -70,9 +73,9 @@ public class NewSocial extends AppCompatActivity implements View.OnClickListener
                     }
                     else {
                         //Adds the new idea under a unique key in the database
-                        Idea idea = new Idea(name.getText().toString(), user.getUid(), user.getEmail(), description.getText().toString(), key, dates.getText().toString(), 0);
-                        ideas.add(idea);
                         key = database.child("ideas").push().getKey();
+                        Idea idea = new Idea(name.getText().toString(), user.getUid(), user.getEmail(), description.getText().toString(), key, dates.getText().toString(), 0);
+
                         database.child("ideas").child(key).setValue(idea);
 
                         //Uploads the image to storage in FireBase
@@ -82,6 +85,7 @@ public class NewSocial extends AppCompatActivity implements View.OnClickListener
                         imageRef = storageRef.child(key+".jpg");
                         UploadTask uploadTask = imageRef.putBytes(data);
 
+                        ideas.add(idea);
                         Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
                         startActivity(intent);
                     }

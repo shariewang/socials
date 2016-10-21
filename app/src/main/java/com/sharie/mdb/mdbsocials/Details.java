@@ -63,6 +63,9 @@ public class Details extends AppCompatActivity implements View.OnClickListener {
         star = (FloatingActionButton) findViewById(R.id.star);
         info = (FloatingActionButton) findViewById(R.id.interested);
 
+        star.setOnClickListener(this);
+        info.setOnClickListener(this);
+
         setSupportActionBar(toolbar);
         setMessage();
         tool.setTitle(title);
@@ -84,6 +87,7 @@ public class Details extends AppCompatActivity implements View.OnClickListener {
     public void onClick(View v){
         switch(v.getId()){
             case R.id.star:
+                star.setImageResource(R.drawable.star);
                 FirebaseUser cur = mAuth.getCurrentUser();
 
                 //Adds self to list of people interested in this social
@@ -115,7 +119,7 @@ public class Details extends AppCompatActivity implements View.OnClickListener {
                 });
 
                 //Makes star icon appear clicked
-                star.setImageResource(R.drawable.star);
+
                 break;
             case R.id.info:
                 Intent show_info = new Intent(getApplicationContext(),Interested.class);
@@ -143,7 +147,7 @@ public class Details extends AppCompatActivity implements View.OnClickListener {
     }
 
     //Runs AsyncTask to download image
-    private class DownloadFilesTask extends AsyncTask<String, Void, Bitmap> {
+    class DownloadFilesTask extends AsyncTask<String, Void, Bitmap> {
         protected Bitmap doInBackground(String... strings) {
             try {return Glide.
                     with(getApplicationContext()).

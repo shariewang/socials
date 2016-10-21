@@ -38,6 +38,7 @@ public class FeedActivity extends AppCompatActivity implements View.OnClickListe
 
         //UI elements
         fab = (FloatingActionButton) findViewById(R.id.new_idea);
+        fab.setOnClickListener(this);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView1);
         ideaAdapter = new IdeaAdapter(getApplicationContext(), ideas);
@@ -128,7 +129,7 @@ public class FeedActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
+
     protected void onResume() {
         super.onResume();
         ideaAdapter.notifyDataSetChanged();
